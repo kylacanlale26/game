@@ -8,3 +8,4 @@
 # gold and shop system
 # end game
 # use list, tuple, dictionary, set
+#hello
