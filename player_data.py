@@ -1,5 +1,3 @@
-import random
-
 #player data - name, class and stats, and additional data
 def player_data():
 
@@ -15,7 +13,7 @@ def player_data():
         "Tank": {"hp": 150, "attack": 25, "defense": 200, "skill": "Iron Clad"}
     }
 
-    #player choice input
+    #input - player choose class
     print("\nClasses: ")
     for c in class_choices:
         print("-", c)
