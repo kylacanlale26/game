@@ -31,6 +31,7 @@ def create_player():
     player["name"] = player_name
     player["class"] = choice
     player["gold"] = 150
+    player["inventory"] = [] #list - inventory storage
 
     return player
 
@@ -39,7 +40,7 @@ player = create_player()
 line = "=" * 5
 
 #list - to reorder dictionary
-order = ["name", "class", "hp", "defense", "skill", "gold"]
+order = ["name", "class", "hp", "defense", "skill", "gold", "inventory"]
 
 #displays player's info vertically
 print(f"\n{line}Player Info{line}")
