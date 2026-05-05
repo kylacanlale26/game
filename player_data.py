@@ -1,5 +1,5 @@
 #player data - name, class and stats, and additional data
-def player_data():
+def create_player():
 
     #input - player's name
     player_name = input("Enter Name: ")
@@ -34,8 +34,8 @@ def player_data():
 
     return player
 
-player = player_data()
-
+player = create_player()
+ 
 line = "=" * 5
 
 #list - to reorder dictionary

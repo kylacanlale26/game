@@ -9,8 +9,21 @@
 # end game
 # use list, tuple, dictionary, set
  
-#===START OF CODE===#
+#   START OF CODE
+
+# CREATE PLAYER
+
+#   choose class
+
+# ENEMY RANDOMIZER
+
+# ATTACK SYSTEM
+
+#   skill system
+
+# SHOP SYSTEM
+
+# GAME LOOP
 
 def game():
 
-    
