@@ -68,7 +68,7 @@ for key in order:
 
 #enemies stats - tuple inside a list
 enemies = [
-    ("Minion", 100, 8, 5),
+    ("Minion", 100, 8, 5), #name, hp, atk, def
     ("Witch", 120, 15, 10),
     ("Evil Fae", 200, 25, 5),
     ("Dark Husk", 200, 30, 15),
