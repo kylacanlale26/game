@@ -31,10 +31,17 @@ def player_data():
     player["name"] = player_name
     player["class"] = choice
     player["gold"] = 150
-    player["inventory"] = []
-    player["skills_used"] = set()
 
     return player
 
 player = player_data()
-print(player)
+
+line = "=" * 5
+
+#list - to reorder dictionary
+order = ["name", "class", "hp", "defense", "skill", "gold"]
+
+#displays player's info vertically
+print(f"\n{line}Player Info{line}")
+for key in order:
+    print(f"{key.capitalize()}: {player[key]}")
