@@ -70,9 +70,7 @@ def create_player():
 
 def player_info_display(player):
     #list - to reorder dictionary
-    order = ["name", "class", "hp", "defense", "skill", "win", "defeat", "gold", "inventory"]
-
-    print(f"\n{boarder}") #seperator
+    order = ["name", "class", "hp", "attack", "defense", "skill", "win", "defeat", "gold", "inventory"]
 
     #displays player's info vertically
     print("\n~ Player Profile ~")
@@ -80,23 +78,21 @@ def player_info_display(player):
         print(f"{key.capitalize():<10}: {player[key]}")
 
 # ENEMY RANDOMIZER
-
-#enemies stats - tuple inside a list
-enemies = [
-    ("Minion", 50, 4, 5), #name, hp, atk, def
-    ("Witch", 60, 10, 10),
-    ("Evil Fae", 65, 20, 5),
-    ("Dark Husk", 70, 20, 12),
-    ("Dragon", 75, 25, 15)
-]
-
-#randomized enemy picking
 def enemy_picking():
+
+    #enemies stats - tuple inside a list
+    enemies = [
+        ("Minion", 50, 4, 5), #name, hp, atk, def
+        ("Witch", 60, 10, 10),
+        ("Evil Fae", 65, 20, 5),
+        ("Dark Husk", 70, 20, 12),
+        ("Dragon", 75, 25, 15)
+    ]
+
     enemy = random.choice(enemies)
     return {"name": enemy[0], "hp": enemy[1], "attack": enemy[2], "defense": enemy[3]}
 
 # BATTLE SYSTEM
-
 def battle(player, enemy):
 
     print(f"\n{boarder}") #seperator
@@ -204,90 +200,173 @@ def battle(player, enemy):
         player["gold"] += reward #gives reward
         player["win"] += 1 #tracks win
         print(f"\nYou defeated the {enemy['name']}!")
-
-        player["hp"] = player["max_hp"] #restore hp after battle
         return True
     
     else:
         player["defeat"] += 1 #tracks defeat
         print(f"\nYou are defeated by the {enemy['name']}!")
-
-        player["hp"] = player["max_hp"] #restore hp after battle
         return False
 
 # SHOP SYSTEM
-
-def shop():
-    pass
-
-# GAME LOOP
-
-def game():
-
-    print(f"{boarder}") #seperator
-
-    print("\n~ WELCOME TO THE DUNGEONS ~") #welcome title
-
-    player = create_player()
-
-    print(f"\n{boarder}") #seperator
-
+def shop(player):
+        
     while True:
 
-        print("\n~ DUNGEON MENU ~") #welcome title
+        print("\n~ WELCOME TO THE POTION SHOP ~")
+        print(f"\nGold: {player['gold']}")
 
-        dungeon_menu = ("Enter Dungeon", "Player Profile", "Shop", "Quit") #tuple
-        for i, item in enumerate(dungeon_menu, start=1):
-            print(f"[{i}] {item}")
+        print("\n[1] BUY POTIONS | [2] EXIT")
 
-        choice = input("\nSelect an option: ")
+        choice = input("\nEnter choice: ")
 
-        #validate choice - checks if input is a digit or not included in the choices
-        while not choice.isdigit() or int(choice) not in range(1, len(dungeon_menu) + 1):
+        while not choice.isdigit() or int(choice) not in [1, 2]:
             choice = input("\nSelected option invalid. Choose again: ")
 
         if choice == "1":
-            enemy = enemy_picking()
-            battle(player, enemy)
+
+            shop_items = {
+                "Heal Potion": {"price": 20, "heal": 30},
+                "Attack Potion": {"price": 50, "attack": 10},
+                "Defense Potion": {"price": 50, "defense": 5}
+            }
+
+            while True:
+
+                print(f"\n{boarder}")
+                print("\n~ AVAILABLE ITEMS ~")
+
+                item_list = list(shop_items.items())
+
+                for i, (item_name, stats) in enumerate(item_list, start=1):
+
+                    if "heal" in stats:
+                        desc = f"Heals {stats['heal']} HP"
+                    elif "attack" in stats:
+                        desc = f"Boosts Attack by {stats['attack']}"
+                    elif "defense" in stats:
+                        desc = f"Boosts Defense by {stats['defense']}"
+                    else:
+                        desc = "No effect"
+
+                    print(f"[{i}] {item_name} - {stats['price']} Gold | {desc}")
+                
+
+                choice = input("\nSelect potion to buy: ")
+
+                while not choice.isdigit() or int(choice) not in range(1, len(item_list) + 1):
+                    choice = input("\nSelected option invalid. Choose again: ")
+
+                selected_name, selected_stats = item_list[int(choice) - 1]
+                price = selected_stats["price"]
+
+                if "heal" in selected_stats and player["hp"] >= player["max_hp"]:
+                    print(f"\n{boarder}")
+                    print("\nYour HP is already full! You cannot buy a Heal Potion.")
+                    continue
+
+                if player["gold"] < price:
+                    print("\nYou don't have enough gold!")
+                    return
+
+                player["gold"] -= price
+
+                if "heal" in selected_stats:
+                    player["hp"] += selected_stats["heal"]
+                    player["hp"] = min(player["hp"], player["max_hp"])
+                elif "attack" in selected_stats:
+                    player["attack"] += selected_stats["attack"]
+                elif "defense" in selected_stats:
+                    player["defense"] += selected_stats["defense"]
+
+                player["inventory"].append(selected_name)
+
+                print(f"\n{boarder}")
+                print(f"\nYou bought {selected_name}!")
+                print(f"\nRemaining Gold: {player['gold']}")
+
+                again = input("\nBuy another potion? [yes/no]: ").lower()
+
+                if again == "no":
+                    print(f"\n{boarder}")
+                    print("\nLeaving shop...")
+                    return
 
         elif choice == "2":
-            player_info_display(player) #displays player profile and updates
+            print(f"\n{boarder}")
+            print("\nLeaving shop...")
+            return
 
-        elif choice == "3":
-            print("\nNo code yet :3")
+# GAME OVERALL SYSTEM
+def game():
 
-        elif choice == "4":
-            print("\nGAME OVER")
-            break
+    while True:
 
         print(f"\n{boarder}") #seperator
 
-        #END GAME
-        if player["win"] == 5:
-            print("\nCONGRATULATIONS ON CLEARING THE DUNGEONS!")
+        print("\n~ WELCOME TO THE DUNGEONS ~") #welcome title
 
-        elif player["defeat"] == 5:
-            print("\nGAME OVER")
+        player = create_player()
+
+        print(f"\n{boarder}") #seperator
+
+        while True:
+
+            print("\n~ DUNGEON MENU ~") #welcome title
+
+            dungeon_menu = ("Enter Dungeon", "Player Profile", "Shop", "Quit") #tuple
+            for i, item in enumerate(dungeon_menu, start=1):
+                print(f"[{i}] {item}")
+
+            choice = input("\nSelect an option: ")
+
+            #validate choice - checks if input is a digit or not included in the choices
+            while not choice.isdigit() or int(choice) not in range(1, len(dungeon_menu) + 1):
+                choice = input("\nSelected option invalid. Choose again: ")
+
+            print(f"\n{boarder}") #seperator
+
+            if choice == "1":
+                enemy = enemy_picking()
+                battle(player, enemy)
+
+            elif choice == "2":
+                player_info_display(player) #displays player profile and updates
+
+            elif choice == "3":
+                shop(player)
+
+            elif choice == "4":
+                print("\nGAME OVER")
+                break
+
+            print(f"\n{boarder}") #seperator
+
+            #END GAME
+            if player["win"] == 5:
+                print("\nCONGRATULATIONS ON CLEARING THE DUNGEONS!")
+
+            elif player["defeat"] == 5 or player["hp"] == 0:
+                print("\nGAME OVER")
+
+            
+        #restart mechanics
+        print(f"\n{boarder}") #seperator
+
+        print("\n[1] PLAY AGAIN | [2] EXIT")
+
+        choice = input("\nChoose: ")
+
+        #validate choice - checks if input is a digit or not included in the choices
+        while not choice.isdigit() or int(choice) not in [1, 2]:
+            choice = input("\nSelected option invalid. Choose again: ")
+
+        if choice == "1":
+            continue
+
+        elif choice == "2":
+            print(f"\n{boarder}") #seperator
+            print("\nExisting the dungeons... Goodbye!")
+            print(f"\n{boarder}") #seperator
+            break
 
 game()
-
-print(f"\n{boarder}") #seperator
-
-restart = ("Play Again", "Quit") #tuple
-
-print("\n[1] PLAY AGAIN | [2] QUIT")
-
-choice = input("\nChoose: ")
-
-print(f"\n{boarder}") #seperator
-
-#validate choice - checks if input is a digit or not included in the choices
-while not choice.isdigit() or int(choice) not in range(1, len(restart) + 1):
-    choice = input("\nSelected option invalid. Choose again: ")
-
-if choice == "1":
-    game()
-
-elif choice == "2":
-    print("\nExisting the dungeons... Goodbye!")
-    print(f"\n{boarder}") #seperator
