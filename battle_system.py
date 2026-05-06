@@ -1,98 +1,9 @@
+import enemy
+import player
+
 import random
 
-print("~ WELCOME TO THE DUNGEONS ~") #welcome title
-
 boarder = "=" * 30
-
-# CREATE PLAYER
-def create_player():
-
-    print(f"\n{boarder}") #seperator
-
-    #input - player's name
-    player_name = input("\nEnter Name: ")
-
-    print(f"\n{boarder}") #seperator
-
-    #dictionary - classes + stats that the players can choose from
-    class_choices = {
-        "Knight": {"hp": 65,
-                   "attack": 15,
-                   "defense":12,
-                   "skill": "Power Slash"},
-        "Assassin": {"hp": 60,
-                     "attack": 25,
-                     "defense": 7,
-                     "skill": "Shadow Strike"},
-        "Mage": {"hp": 50,
-                 "attack": 20,
-                 "defense": 5,
-                 "skill": "Abyssal Flame"},
-        "Healer": {"hp": 100,
-                   "attack": 8,
-                   "defense": 10,
-                   "skill": "Divine Healing"},
-        "Tank": {"hp": 75,
-                 "attack": 12,
-                 "defense": 25,
-                 "skill": "Iron Clad"}
-    }
-
-    #input - player choose class
-    print("\nClasses: ")
-    class_list = list(class_choices.keys())
-
-    for i, c in enumerate(class_list, start=1):
-        print(f"[{i}] {c:}")
-
-    choice = input("\nChoose your Class: ")
-
-    #validate choice - checks if input is a digit or not included in the choices
-    while not choice.isdigit() or int(choice) not in range(1, len(class_list) + 1):
-        choice = input("\nSelected class invalid. Choose again: ").title()
-
-    choice = class_list[int(choice) - 1]
-
-    #copy selected class' stats
-    player = class_choices[choice].copy()
-
-    #additional player data - add items to dictionary class_choice
-    player["name"] = player_name
-    player["class"] = choice
-    player["gold"] = 150
-    player["inventory"] = [] #list - inventory storage
-
-    player["max_hp"] = player["hp"] #sets max hp for the healer
-
-    return player
-
-player = create_player()
-
-#list - to reorder dictionary
-order = ["name", "class", "hp", "defense", "skill", "gold", "inventory"]
-
-print(f"\n{boarder}") #seperator
-
-#displays player's info vertically
-print("\n~ Player Info ~")
-for key in order:
-    print(f"{key.capitalize():<10}: {player[key]}")
-
-# ENEMY RANDOMIZER
-
-#enemies stats - tuple inside a list
-enemies = [
-    ("Minion", 50, 4, 5), #name, hp, atk, def
-    ("Witch", 60, 10, 10),
-    ("Evil Fae", 75, 20, 5),
-    ("Dark Husk", 80, 20, 15),
-    ("Dragon", 100, 25, 20)
-]
-
-#randomized enemy picking
-def enemy_picking():
-    enemy = random.choice(enemies)
-    return {"name": enemy[0], "hp": enemy[1], "attack": enemy[2], "defense": enemy[3]}
 
 # BATTLE SYSTEM
 
@@ -127,6 +38,8 @@ def battle(player, enemy):
         #skills system
         elif action == "2":
             print(f"\n{player['skill']}!")
+
+            skill_dmg = 0
             
             #each class have different skills and deals different amount of damage
             if player["skill"] == "Power Slash":
@@ -147,14 +60,14 @@ def battle(player, enemy):
                     heal = int(player["max_hp"] * 0.2) #heals player based on their max hp
                     player["hp"] += heal
                     print(f"\nYou healed {heal} HP!")
-                    dmg = 0
+                    
 
             elif player["skill"] == "Iron Clad": #defense buff mechanism (if chosen class is Tank)
                 defense = int(player["defense"] * 0.2) #defense buff calculation
                 player["defense"] += defense
                 print(f"\nSkill increased your defense by {defense}!")
-                dmg = 0
-
+                
+            
             dmg = skill_dmg - (enemy["defense"] * 0.5) #enemy's defense reduces damage
             dmg = max(1, int(dmg)) #prevents 0 or negative damage
             enemy["hp"] -= dmg
@@ -200,5 +113,8 @@ def battle(player, enemy):
             print(f"\n{boarder}") #seperator
             break
 
-enemy = enemy_picking()
+# RESULT
+
+# def results()
+
 battle(player, enemy)

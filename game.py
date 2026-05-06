@@ -1,19 +1,6 @@
-# Simple dungeon text based game
-# where the player can input their name
-# have their own stats
-# you provide the player classes to choose from your own declared classes
-# attack system
-# defense and skill mechanism or additional mechanisim
-# complete
-# gold and shop system
-# end game
-# use list, tuple, dictionary, set
- 
 #   START OF CODE
 
 import random
-
-print("~ WELCOME TO THE DUNGEONS ~") #welcome title
 
 boarder = "=" * 30
 
@@ -58,11 +45,11 @@ def create_player():
     for i, c in enumerate(class_list, start=1):
         print(f"[{i}] {c:}")
 
-    choice = input("\nChoose your Class: ")
+    choice = input("\nSelect your class (number): ")
 
     #validate choice - checks if input is a digit or not included in the choices
     while not choice.isdigit() or int(choice) not in range(1, len(class_list) + 1):
-        choice = input("\nSelected class invalid. Choose again: ").title()
+        choice = input("\nSelected class invalid. Choose again: ")
 
     choice = class_list[int(choice) - 1]
 
@@ -72,6 +59,8 @@ def create_player():
     #additional player data - add items to dictionary class_choice
     player["name"] = player_name
     player["class"] = choice
+    player["win"] = 0
+    player["defeat"] = 0
     player["gold"] = 150
     player["inventory"] = [] #list - inventory storage
 
@@ -79,17 +68,16 @@ def create_player():
 
     return player
 
-player = create_player()
+def player_info_display(player):
+    #list - to reorder dictionary
+    order = ["name", "class", "hp", "defense", "skill", "win", "defeat", "gold", "inventory"]
 
-#list - to reorder dictionary
-order = ["name", "class", "hp", "defense", "skill", "gold", "inventory"]
+    print(f"\n{boarder}") #seperator
 
-print(f"\n{boarder}") #seperator
-
-#displays player's info vertically
-print("\n~ Player Info ~")
-for key in order:
-    print(f"{key.capitalize():<10}: {player[key]}")
+    #displays player's info vertically
+    print("\n~ Player Profile ~")
+    for key in order:
+        print(f"{key.capitalize():<10}: {player[key]}")
 
 # ENEMY RANDOMIZER
 
@@ -97,9 +85,9 @@ for key in order:
 enemies = [
     ("Minion", 50, 4, 5), #name, hp, atk, def
     ("Witch", 60, 10, 10),
-    ("Evil Fae", 75, 20, 5),
-    ("Dark Husk", 80, 20, 15),
-    ("Dragon", 100, 25, 20)
+    ("Evil Fae", 65, 20, 5),
+    ("Dark Husk", 70, 20, 12),
+    ("Dragon", 75, 25, 15)
 ]
 
 #randomized enemy picking
@@ -124,9 +112,8 @@ def battle(player, enemy):
 
         # PLAYER ACTION
         print("\nYOUR TURN TO ATTACK!")
-        print("\nBattle Actions (Number): [1] Normal Attack | [2] Skill")
-        action = input("Choose: ").lower() 
-            #.lower() to change case to lower case
+        print("\n[1] Normal Attack | [2] Skill")
+        action = input("Choose action: ") 
 
         print(f"\n{boarder}") #seperator
 
@@ -135,11 +122,14 @@ def battle(player, enemy):
             dmg = player["attack"] - (enemy["defense"] * 0.5) #enemy's defense reduces damage
             dmg = max(1, int(dmg)) #prevents 0 or negative damage
             enemy["hp"] -= dmg #substract dmg to enemy's hp
+            enemy["hp"] = max(0, enemy["hp"])  #prevent negative enemy HP
             print(f"\nYou dealt {dmg} to the enemy!")
 
         #skills system
         elif action == "2":
             print(f"\n{player['skill']}!")
+
+            skill_dmg = 0
             
             #each class have different skills and deals different amount of damage
             if player["skill"] == "Power Slash":
@@ -159,19 +149,21 @@ def battle(player, enemy):
                 else:
                     heal = int(player["max_hp"] * 0.2) #heals player based on their max hp
                     player["hp"] += heal
+                    player["hp"] = min(player["hp"], player["max_hp"])  #prevent overheal above max HP    
                     print(f"\nYou healed {heal} HP!")
-                    dmg = 0
-
+                    
             elif player["skill"] == "Iron Clad": #defense buff mechanism (if chosen class is Tank)
                 defense = int(player["defense"] * 0.2) #defense buff calculation
                 player["defense"] += defense
                 print(f"\nSkill increased your defense by {defense}!")
-                dmg = 0
+                
 
             dmg = skill_dmg - (enemy["defense"] * 0.5) #enemy's defense reduces damage
             dmg = max(1, int(dmg)) #prevents 0 or negative damage
             enemy["hp"] -= dmg
+            enemy["hp"] = max(0, enemy["hp"])  #prevent negative enemy HP
             print(f"\nYou dealt {dmg} to the enemy!")
+            dmg = 0
 
         else: #if player typed something out of the choices
             print("\nAction invalid!")
@@ -179,13 +171,11 @@ def battle(player, enemy):
 
         print(f"\n{boarder}") #seperator
 
-        #check if enemy is defeated
+        #enemy action
+
         if enemy["hp"] <= 0:
-            print(f"\nYou defeated the {enemy['name']}!")
-            print(f"\n{boarder}") #seperator
             break
 
-        #enemy action
         print(f"\n{enemy['name']}'s TURN TO ATTACK".upper()) #.upper() to change case to capitalized
 
         print(f"\n{boarder}") #seperator
@@ -203,22 +193,101 @@ def battle(player, enemy):
         
         dmg = max(1, int(dmg)) #prevents 0 or negative damage
         player["hp"] -= dmg #substract dmg to player's hp
+        player["hp"] = max(0, player["hp"])  #prevent HP going negative
         print(f"\nYou are hit {dmg} damage!")
         
         print(f"\n{boarder}") #seperator
 
-        #check if player is defeated
-        if player["hp"] <= 0:
-            print(f"\nYou are defeated by the {enemy['name']}!")
-            print(f"\n{boarder}") #seperator
-            break
+    #reward system
+    if player["hp"] > 0:
+        reward = random.randint(10, 40)
+        player["gold"] += reward #gives reward
+        player["win"] += 1 #tracks win
+        print(f"\nYou defeated the {enemy['name']}!")
 
-enemy = enemy_picking()
+        player["hp"] = player["max_hp"] #restore hp after battle
+        return True
+    
+    else:
+        player["defeat"] += 1 #tracks defeat
+        print(f"\nYou are defeated by the {enemy['name']}!")
+
+        player["hp"] = player["max_hp"] #restore hp after battle
+        return False
 
 # SHOP SYSTEM
+
+def shop():
+    pass
 
 # GAME LOOP
 
 def game():
 
-    
+    print(f"{boarder}") #seperator
+
+    print("\n~ WELCOME TO THE DUNGEONS ~") #welcome title
+
+    player = create_player()
+
+    print(f"\n{boarder}") #seperator
+
+    while True:
+
+        print("\n~ DUNGEON MENU ~") #welcome title
+
+        dungeon_menu = ("Enter Dungeon", "Player Profile", "Shop", "Quit") #tuple
+        for i, item in enumerate(dungeon_menu, start=1):
+            print(f"[{i}] {item}")
+
+        choice = input("\nSelect an option: ")
+
+        #validate choice - checks if input is a digit or not included in the choices
+        while not choice.isdigit() or int(choice) not in range(1, len(dungeon_menu) + 1):
+            choice = input("\nSelected option invalid. Choose again: ")
+
+        if choice == "1":
+            enemy = enemy_picking()
+            battle(player, enemy)
+
+        elif choice == "2":
+            player_info_display(player) #displays player profile and updates
+
+        elif choice == "3":
+            print("\nNo code yet :3")
+
+        elif choice == "4":
+            print("\nGAME OVER")
+            break
+
+        print(f"\n{boarder}") #seperator
+
+        #END GAME
+        if player["win"] == 5:
+            print("\nCONGRATULATIONS ON CLEARING THE DUNGEONS!")
+
+        elif player["defeat"] == 5:
+            print("\nGAME OVER")
+
+game()
+
+print(f"\n{boarder}") #seperator
+
+restart = ("Play Again", "Quit") #tuple
+
+print("\n[1] PLAY AGAIN | [2] QUIT")
+
+choice = input("\nChoose: ")
+
+print(f"\n{boarder}") #seperator
+
+#validate choice - checks if input is a digit or not included in the choices
+while not choice.isdigit() or int(choice) not in range(1, len(restart) + 1):
+    choice = input("\nSelected option invalid. Choose again: ")
+
+if choice == "1":
+    game()
+
+elif choice == "2":
+    print("\nExisting the dungeons... Goodbye!")
+    print(f"\n{boarder}") #seperator
