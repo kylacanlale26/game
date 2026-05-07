@@ -1,0 +1,394 @@
+import random
+import os
+
+# PLAYER INFORMATION - CASSEY
+def player_info():
+    
+    player_name = input("\nPlease enter your hero name: ") #input - player's name
+
+    print("\n" + "=" * 34)
+
+    #dictionary - classes (+ stats) that the players can choose from
+    available_classes = {
+        "Warrior": {"hp": 150,
+                   "attack_bonus": 5,
+                   "skills": {
+                        "1": {"name": "Slash", "damage": 25},
+                        "2": {"name": "Shield Bash", "damage": 20},
+                        "3": {"name": "Power Strike", "damage": 35}
+                        }
+                    },
+        "Elf": {"hp": 80,
+                "attack_bonus": 20,
+                "skills": {
+                    "1": {"name": "Arrow Shot", "damage": 20},
+                    "2": {"name": "Arrow Rain", "damage": 30},
+                    "3": {"name": "Wind Step", "damage": 25}
+                    }
+                },
+        "Mage": {"hp": 60,
+                "attack_bonus": 25,
+                "skills": {
+                    "1": {"name": "Fireball", "damage": 30},
+                    "2": {"name": "Ice Spike", "damage": 25},
+                    "3": {"name": "Lightning Bolt", "damage": 35}
+                    }
+                },
+        "Healer": {"hp": 100,
+                 "attack_bonus": 5,
+                 "skills": {
+                    "1": {"name": "Small Heal", "heal": 20},
+                    "2": {"name": "Holy Light", "damage": 15},
+                    "3": {"name": "Big Heal", "heal": 35}
+                    }
+                }
+    }
+
+    #input - class selection
+    print("\nChoose your class:")
+
+    class_names = list(available_classes.keys()) #gets all keys from dictionary then turn them into list
+
+    for i, (name, stats) in enumerate(available_classes.items(), start=1): #display options (name, stats) with numbering (i)
+        print(f"[{i}] {name} (HP: {stats['hp']} | Attack Bonus: +{stats['attack_bonus']})")
+
+    while True:
+        class_choice = input("\nSelect class (1-4): ")
+
+        if class_choice in ["1", "2", "3", "4"]: #validates input
+
+            selected_class_name = class_names[int(class_choice) - 1]
+
+            # copy selected class stats
+            player = available_classes[selected_class_name].copy()
+
+            # additional player data
+            player["name"] = player_name
+            player["class"] = selected_class_name
+            player["gold"] = 150
+            player["inventory"] = [] #list - inventory storage
+
+            #for tracking for end game
+            player["cleared_levels"] = 0 #tracks win count
+            player["chances"] = 0 #tracks lose count
+
+            print("\n" + "=" * 34)
+
+            print(f"\nWelcome, {player['name']} the {player['class']}!")
+            break
+
+        else:
+            print("\nInvalid class selection. Please enter 1, 2, 3, or 4 only.")
+
+    player["max_hp"] = player["hp"] # Added to track healing limits
+
+    return player
+
+def show_status(player):
+    
+    print("\n====== PLAYER STATUS ======")
+    print(f"Remaining chances: {player['chances']}")
+    print(f"Name: {player['name']} the {player['class']}")
+    print(f"HP: {player['hp']}/{player['max_hp']}")
+    print(f"Attack Bonus: +{player['attack_bonus']}")
+    print(f"Gold: {player['gold']}")
+    print(f"Inventory: {player['inventory']}")
+
+# ENEMY RANDOMIZER
+def enemy_picker():
+    
+    enemies = [
+        ("Goblin", 70, 15), #name, hp, reward
+        ("Skeleton", 80, 25),
+        ("Orc", 90, 40),
+        ("Dragon", 100, 100)
+    ]
+
+    enemy = random.choice(enemies) #picks random enemy
+
+    #converts to dictionary to be used in game
+
+    return {"name": enemy[0],
+            "hp": enemy[1],
+            "reward": enemy[2]}
+
+# BATTLE SYSTEM - LUIS, JUSTIN, HARRY
+
+defeated_enemies = set() #set - store defeated enemies
+
+def adventure(player, enemy):
+
+    print("\n====== ENTERING DUNGEON ======")
+    
+    print(f"\nA wild {enemy['name']} appeared!")
+
+    print("\n" + "=" * 30)
+
+    #battle loop - LUIS
+    while enemy["hp"] > 0 and player["hp"] > 0:
+        print(f"\nYour HP: {player['hp']} | {enemy['name']} HP: {enemy['hp']}")
+        print("\n" + "=" * 30)
+
+        # uses tuple because these actions doesnt change
+        actions = ("Attack", "Skill", "Defend", "Run")
+
+        print(f"\n[1] {actions[0]} | [2] {actions[1]} | [3] {actions[2]} | [4] {actions[3]}")
+
+        choice = input("\nChoose your action (1-4): ") #player action
+
+        print("\n" + "=" * 30)
+        
+        if choice == "1":
+            # Damage now includes the class attack bonus
+            damage = random.randint(10, 25) + player["attack_bonus"] #random attack damage with attack bonus 
+            enemy["hp"] -= damage
+            print(f"\nYou dealt {damage} damage!")
+        
+        #skill system - HARRY
+        elif choice == "2":
+
+            skills = player["skills"]
+
+            print(f"\nYour Skills:")
+
+            print(f"[1] {skills['1']['name']} | [2] {skills['2']['name']} | [3] {skills['3']['name']}")
+
+            skill_choice = input("\nChoose your skill (1-3): ") #player skill selection in battle
+
+            print("\n" + "=" * 30)
+
+            if skill_choice in skills:
+
+                skill = skills[skill_choice]
+
+                #damage skill
+                if "damage" in skill:
+                    damage = skill["damage"] + player["attack_bonus"] #skill damage with attack bonus
+                    enemy["hp"] -= damage
+                    print(f"\nYou used {skill['name']} and dealt {damage} damage!")
+
+                #heal skill
+                elif "heal" in skill:
+
+                    if player["hp"] >= player["max_hp"]:
+                        print("\nYou are already full HP!")
+                    else:
+                        heal = skill["heal"]
+                        player["hp"] = min(player["hp"] + heal, player["max_hp"]) #add heal to hp and prevent overheal above max HP
+                        print(f"\nYou used {skill['name']} and healed {heal} HP!")
+
+            else:
+                print("\nInvalid skill choice!")
+        
+        elif choice == "3":
+            print(f"\n{player['name']} defended!")
+
+        elif choice == "4":
+            print("\nYou escaped safely!")
+            return
+        else:
+            print("\nInvalid choice!")
+
+        print("\n" + "=" * 30)
+
+        #enemy action
+        if enemy["hp"] > 0:
+                enemy_damage = random.randint(10, 25) #random enemy attack damage
+
+                if choice == "3":
+                    enemy_damage = int(enemy_damage * 0.2)  #lowers enemy damage because player chose to defend
+
+                player["hp"] -= enemy_damage
+                print(f"\n{enemy['name']} dealt {enemy_damage} damage!")
+
+                print("\n" + "=" * 30)
+
+    #battle results and reward system
+    if player["hp"] > 0:
+        print(f"\nYou defeated the {enemy['name']}!")
+        print(f"\nYou earned {enemy['reward']} gold!")
+
+        player["gold"] += enemy["reward"]
+        player["cleared_levels"] += 1 #for tracking wins
+        defeated_enemies.add(enemy["name"])
+
+        print("\n" + "=" * 30)
+
+        #next level selection - JUSTIN
+        if player["cleared_levels"] < 12 and player["chances"] < 1: #so it won't ask if end game condition have been met
+            print("\nLevel successfully cleared!")
+
+            print("\nChoose next level:")
+            print("[1] Forest Dungeon")
+            print("[2] Ice Cave")
+            print("[3] Dragon Castle")
+
+            choice = input("\nEnter next level (1-3): ")
+
+            while choice not in ["1", "2", "3"]:
+                choice = input("\nInvalid choice! Choose again (1-3): ")
+
+            print("\n" + "=" * 30)
+
+            if choice == "1":
+                print("\nEntering Forest Dungeon...")
+
+            elif choice == "2":
+                print("\nEntering Ice Cave...")
+
+            elif choice == "3":
+                print("\nEntering Dragon Castle...")
+
+        return True
+
+    else:
+        print("\nYou were defeated...")
+        print("No gold reward.")
+        print("\n" + "=" * 30)
+
+        player["chances"] += 1 #for tracking loses
+
+        return False
+
+# SHOP SYSTEM - MAMI
+def shop(player):
+
+    shop_items = [
+        ("Small Potion", 10, 20), #name, price, 
+        ("Medium Potion", 20, 40),
+        ("Large Potion", 35, 70)
+    ]
+
+    while True: #shop session
+        print("\n====== SHOP ======")
+
+        print(f"\nGold: {player['gold']}\n") #display gold count
+
+        for index, item in enumerate(shop_items, start=1):
+            print(f"[{index}] {item[0]} - {item[1]} Gold")
+        print("[0] Exit Shop")
+
+        choice = input("\nChoose item to buy (1-3 or 0): ")
+
+        #validate input - checks if its a digit or included in the choices
+        while choice not in ["1", "2", "3", "0"]: #loop to keep asking if invalid input
+            choice = input("\nSelected option invalid. Choose again: ")
+
+        if choice == "0":
+            print("\n" + "=" * 18)
+            print("\nLeaving shop...")
+            return
+
+        if choice.isdigit():
+
+            choice = int(choice)
+
+            if 1 <= choice <= len(shop_items):
+                item = shop_items[choice - 1]
+
+                if player["gold"] >= item[1]:
+                    player["gold"] -= item[1]
+                    player["hp"] = min(player["hp"] + item[2], player["max_hp"]) # Don't over-heal
+                    player["inventory"].append(item[0])
+                    print(f"\nYou bought {item[0]} and healed!")
+
+                else:
+                    print("\nNot enough gold!")
+
+            # ask if player wants to continue shopping
+            print("\n" + "=" * 18)
+
+        again = input("\nBuy another potion? [yes/no]: ").lower()
+
+        if again == "no":
+            print("\n" + "=" * 18)
+            print("\nLeaving shop...")
+            return
+
+#displays defeated enemies
+def show_defeated():
+
+    print("\n====== DEFEATED ENEMIES ======")
+    if not defeated_enemies:
+        print("\nNo enemies defeated yet.")
+    else:
+        for enemy in defeated_enemies:
+            print("-", enemy)
+
+
+# GAME OVERALL SYSTEM | MENU + LEVELS + END GAME - JD, JUSTIN, & KYLA
+def game():
+        
+    #game loop
+    while True:
+    
+        print("\n====== PYTHON DUNGEON QUEST ======")
+
+        print("\nWelcome to Python Dungeon Quest!")
+
+        player = player_info()
+
+        print("\nGame Objectives:")
+        print("Clear 12 levels two win.")
+        print("You only have 3 chances to succeed.")
+        print(f"\nGood luck, hero {player['name']}!")
+
+        #menu loop - JD
+        while True:
+            print("\n====== MAIN MENU ======")
+            print("[1] Explore Dungeon\n[2] Visit Shop\n[3] Show Status\n[4] Show Defeated Enemies\n[5] Exit Game")
+            menu = input("\nChoose option (1-5): ")
+
+            #validate choice - checks if input is a digit or not included in the choices
+            while menu not in ["1", "2", "3", "4", "5"]:
+                menu = input("\nInvalid choice! Choose again (1-5 only): ")
+
+            if menu == "1":
+                enemy = enemy_picker() 
+                adventure(player, enemy)
+
+            elif menu == "2":
+                shop(player)
+
+            elif menu == "3": 
+                show_status(player)
+
+            elif menu == "4":
+                show_defeated()
+
+            elif menu == "5":
+                print("\n" + "=" * 23)
+                print("\nThanks for playing, , Hero {player['name']}!")
+                break
+
+            #end game system - KYLA
+            if player["cleared_levels"] >= 12: #win condition
+                print(f"\nCongratulations! You have cleared 12 levels, Hero {player['name']}!")
+                print("\nMore games to come...")
+                break
+
+            if player["chances"] >= 3: #lose condition
+                print("\nGame over... You used all chances")
+                break
+        
+        print("\n" + "=" * 23)
+
+        #restart system
+        print("\n[1] PLAY AGAIN | [2] EXIT THE GAME")
+
+        choice = input("\nChoose (1 or 2): ")
+
+        #validate choice - checks if input is a digit or not included in the choices
+        while not choice.isdigit() or int(choice) not in [1, 2]:
+            choice = input("\nSelected option invalid. Choose again (1 or 2 only): ")
+
+        if choice == "1":
+            continue #restart game
+
+        elif choice == "2":
+            print("\n" + "=" * 23)
+            print(f"\nExisting the game... Goodbye!")
+            print("\n" + "=" * 23)
+            break #exit game
+
+game()
